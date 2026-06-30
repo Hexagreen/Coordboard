@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.hexagreen.coordboard.mixin",
+  "plugin": "net.hexagreen.coordboard.mixin.CoordboardMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ModNetworkingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
