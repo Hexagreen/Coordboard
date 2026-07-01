@@ -25,10 +25,15 @@ public class ClipboardNavigationTarget implements NavigationTarget {
     private static final Pattern VEC2 = Pattern.compile("([+-]?\\d+)[ ,]([+-]?\\d+)");
 
     @Override
+    public float getMaxRange() {
+        return 0.0F;
+    }
+
+    @Override
     public @Nullable Vec3 getTarget(NavTableBlockEntity navTableBlockEntity, ItemStack itemStack) {
         Component custom_name = itemStack.getComponents().getOrDefault(DataComponents.CUSTOM_NAME, Component.empty());
         ComponentContents c;
-        int navY = 64;
+        double navY = navTableBlockEntity.getProjectedSelfPos().y();
         if((c = custom_name.getContents()) instanceof TranslatableContents) {
             if(((TranslatableContents) c).getKey().matches("createdeliveryrequired\\.(market|contract)\\.receipt_name")) {
                 return getTargetFormDeliveryReceipt(itemStack, navY);
@@ -37,7 +42,7 @@ public class ClipboardNavigationTarget implements NavigationTarget {
         return getTargetFromCoordinateBoard(itemStack, navY);
     }
 
-    private @Nullable Vec3 getTargetFromCoordinateBoard(ItemStack itemStack, int y) {
+    private @Nullable Vec3 getTargetFromCoordinateBoard(ItemStack itemStack, double y) {
         List<ClipboardEntry> currentPage = ClipboardEntry.getLastViewedEntries(itemStack);
         Optional<ClipboardEntry> selected = currentPage.stream()
             .filter(e -> e.checked)
@@ -74,7 +79,7 @@ public class ClipboardNavigationTarget implements NavigationTarget {
         return null;
     }
 
-    private @Nullable Vec3 getTargetFormDeliveryReceipt(ItemStack itemStack, int y) {
+    private @Nullable Vec3 getTargetFormDeliveryReceipt(ItemStack itemStack, double y) {
         ClipboardContent clipboardContent = itemStack.getComponents().getOrDefault(AllDataComponents.CLIPBOARD_CONTENT, ClipboardContent.EMPTY);
         List<ClipboardEntry> receiptPage = ClipboardEntry.readAll(clipboardContent).getFirst();
         ComponentContents coordinate = receiptPage.get(3).text.getContents();
