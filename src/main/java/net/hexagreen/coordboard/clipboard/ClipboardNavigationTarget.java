@@ -1,14 +1,8 @@
 package net.hexagreen.coordboard.clipboard;
 
-import com.simibubi.create.AllDataComponents;
-import com.simibubi.create.content.equipment.clipboard.ClipboardContent;
 import com.simibubi.create.content.equipment.clipboard.ClipboardEntry;
 import dev.simulated_team.simulated.content.blocks.nav_table.NavTableBlockEntity;
 import dev.simulated_team.simulated.content.blocks.nav_table.navigation_target.NavigationTarget;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentContents;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -31,14 +25,7 @@ public class ClipboardNavigationTarget implements NavigationTarget {
 
     @Override
     public @Nullable Vec3 getTarget(NavTableBlockEntity navTableBlockEntity, ItemStack itemStack) {
-        Component custom_name = itemStack.getComponents().getOrDefault(DataComponents.CUSTOM_NAME, Component.empty());
-        ComponentContents c;
         double navY = navTableBlockEntity.getProjectedSelfPos().y();
-        if((c = custom_name.getContents()) instanceof TranslatableContents) {
-            if(((TranslatableContents) c).getKey().matches("createdeliveryrequired\\.(market|contract)\\.receipt_name")) {
-                return getTargetFormDeliveryReceipt(itemStack, navY);
-            }
-        }
         return getTargetFromCoordinateBoard(itemStack, navY);
     }
 
@@ -52,11 +39,13 @@ public class ClipboardNavigationTarget implements NavigationTarget {
             String string = coordinateSanitizer(selected.get().text.getString());
             try {
                 Matcher namedMatcher = NAMED_VEC.matcher(string);
-                if(namedMatcher.find()) {
-                    String rawX = namedMatcher.group("x");
+                String rawX = null, rawZ = null;
+                while(namedMatcher.find()) {
+                    if(namedMatcher.group("x") != null) rawX = namedMatcher.group("x");
+                    if(namedMatcher.group("z") != null) rawZ = namedMatcher.group("z");
+                }
+                if(rawX != null && rawZ != null) {
                     int x = Integer.parseInt(rawX);
-                    namedMatcher.find();
-                    String rawZ = namedMatcher.group("z");
                     int z = Integer.parseInt(rawZ);
                     return new Vec3(x, y, z);
                 }
@@ -74,21 +63,6 @@ public class ClipboardNavigationTarget implements NavigationTarget {
                     int z = Integer.parseInt(v2Matcher.group(2));
                     return new Vec3(x, 64, z);
                 }
-            } catch(NumberFormatException ignore) {}
-        }
-        return null;
-    }
-
-    private @Nullable Vec3 getTargetFormDeliveryReceipt(ItemStack itemStack, double y) {
-        ClipboardContent clipboardContent = itemStack.getComponents().getOrDefault(AllDataComponents.CLIPBOARD_CONTENT, ClipboardContent.EMPTY);
-        List<ClipboardEntry> receiptPage = ClipboardEntry.readAll(clipboardContent).getFirst();
-        ComponentContents coordinate = receiptPage.get(3).text.getContents();
-        if(coordinate instanceof TranslatableContents) {
-            Object[] vec = ((TranslatableContents) coordinate).getArgs();
-            try {
-                int x = Integer.parseInt(vec[0].toString());
-                int z = Integer.parseInt(vec[2].toString());
-                return new Vec3(x, y, z);
             } catch(NumberFormatException ignore) {}
         }
         return null;
